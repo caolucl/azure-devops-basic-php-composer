@@ -53,7 +53,7 @@ stages:
     displayName: Deploy Linux Web App
     environment: $(environmentName)
     pool:
-      vmImage: $(vmImageName)
+      vmImage: $(vmImage)
     strategy:
       runOnce:
         deploy:
