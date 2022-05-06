@@ -44,6 +44,9 @@ stages:
         rootFolder: $(System.DefaultWorkingDirectory)
         includeRootFolder: false
         archiveType: zip
+        
+    - upload: $(Build.ArtifactStagingDirectory)
+      artifact: drop
 
 - stage: Deploy
   displayName: Deploy stage
