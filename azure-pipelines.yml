@@ -45,8 +45,10 @@ stages:
         includeRootFolder: false
         archiveType: zip
         
-    - upload: $(Build.ArtifactStagingDirectory)
-      artifact: drop
+    - task: PublishBuildArtifacts@1
+      displayName: Publish Artifact
+      inputs:
+        PathtoPublish: $(build.artifactstagingdirectory)
 
 - stage: Deploy
   displayName: Deploy stage
@@ -62,10 +64,7 @@ stages:
       runOnce:
         deploy:
           steps:
-          - task: PublishBuildArtifacts@1
-            displayName: Publish Artifact
-            inputs:
-              PathtoPublish: $(build.artifactstagingdirectory)
+          
 
           - task: AzureWebApp@1
             displayName: Azure Web App Deploy
