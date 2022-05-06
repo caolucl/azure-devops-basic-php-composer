@@ -3,6 +3,7 @@
 require __DIR__ . '/vendor/autoload.php';
 use Carbon\Carbon;
 
+printf("LC");
 
 printf("Right now in New York is %s.\n", Carbon::now('US/Eastern')->format('Y-m-d g:i:s A'));
 
