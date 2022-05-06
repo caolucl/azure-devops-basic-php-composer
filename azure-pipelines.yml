@@ -13,37 +13,60 @@ variables:
   phpVersion: 7.2
   serviceConnectionToAzure: "php-app-service-connection"
   appName: 'php-1-dev-app'
+  environmentName: 'dev'
 
-steps:
-- script: |
-    sudo update-alternatives --set php /usr/bin/php$(phpVersion)
-    sudo update-alternatives --set phar /usr/bin/phar$(phpVersion)
-    sudo update-alternatives --set phpdbg /usr/bin/phpdbg$(phpVersion)
-    sudo update-alternatives --set php-cgi /usr/bin/php-cgi$(phpVersion)
-    sudo update-alternatives --set phar.phar /usr/bin/phar.phar$(phpVersion)
-    php -version
-  displayName: 'Use PHP version $(phpVersion)'
+stages:
+- stage: Build
+  displayName: Build composer
+  jobs:
+  - job:  Buildcomposer
+    displayName: Buildcomposer
+    pool:
+      vmImage: $(vmImage)
+    steps:
+    - script: |
+        sudo update-alternatives --set php /usr/bin/php$(phpVersion)
+        sudo update-alternatives --set phar /usr/bin/phar$(phpVersion)
+        sudo update-alternatives --set phpdbg /usr/bin/phpdbg$(phpVersion)
+        sudo update-alternatives --set php-cgi /usr/bin/php-cgi$(phpVersion)
+        sudo update-alternatives --set phar.phar /usr/bin/phar.phar$(phpVersion)
+        php -version
+      displayName: 'Use PHP version $(phpVersion)'
 
-- script: composer install --no-interaction --prefer-dist
-  displayName: 'composer install'
-# add these as the last steps (below all the other `task` items under `steps`)
-# to deploy to your app service
-- task: ArchiveFiles@1
-  displayName: Archive files
-  inputs:
-    rootFolder: $(System.DefaultWorkingDirectory)
-    includeRootFolder: false
-    archiveType: zip
+    - script: composer install --no-interaction --prefer-dist
+      displayName: 'composer install'
+    # add these as the last steps (below all the other `task` items under `steps`)
+    # to deploy to your app service
+    - task: ArchiveFiles@1
+      displayName: Archive files
+      inputs:
+        rootFolder: $(System.DefaultWorkingDirectory)
+        includeRootFolder: false
+        archiveType: zip
 
-- task: PublishBuildArtifacts@1
-  displayName: Publish Artifact
-  inputs:
-    PathtoPublish: $(build.artifactstagingdirectory)
+- stage: Deploy
+  displayName: Deploy stage
+  dependsOn: Build
+  condition: succeeded()
+  jobs:
+  - deployment: DeployLinuxWebApp
+    displayName: Deploy Linux Web App
+    environment: $(environmentName)
+    pool:
+      vmImage: $(vmImageName)
+    strategy:
+      runOnce:
+        deploy:
+          steps:
+          - task: PublishBuildArtifacts@1
+            displayName: Publish Artifact
+            inputs:
+              PathtoPublish: $(build.artifactstagingdirectory)
 
-- task: AzureWebApp@1
-  displayName: Azure Web App Deploy
-  inputs:
-    azureSubscription: $(serviceConnectionToAzure)
-    appType: webAppLinux
-    appName: $(appName)
-    package: $(build.artifactstagingdirectory)/**/*.zip
+          - task: AzureWebApp@1
+            displayName: Azure Web App Deploy
+            inputs:
+              azureSubscription: $(serviceConnectionToAzure)
+              appType: webAppLinux
+              appName: $(appName)
+              package: $(build.artifactstagingdirectory)/**/*.zip
