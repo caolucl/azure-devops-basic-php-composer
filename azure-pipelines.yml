@@ -6,14 +6,15 @@
 trigger:
 - main
 
-pool:
-  vmImage: ubuntu-latest
+#pool:
+#  vmImage: ubuntu-latest
 
 variables:
   phpVersion: 7.2
   serviceConnectionToAzure: "php-app-service-connection"
   appName: 'php-1-dev-app'
   environmentName: 'dev'
+  vmImage: ubuntu-latest
 
 stages:
 - stage: Build
